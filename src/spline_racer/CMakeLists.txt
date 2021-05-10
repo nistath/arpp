@@ -25,7 +25,7 @@ find_package(interface_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3)
 
-add_executable(main src/main.cpp)
+add_executable(main src/main.cpp src/Track.cpp)
 
 ament_target_dependencies(main rclcpp interface_msgs std_msgs Eigen3)
 

@@ -1,8 +1,11 @@
+#pragma once
+
 #include <istream>
 #include <iterator>
 #include <vector>
 
 #include "Geometry.hpp"
+#include "assert.hpp"
 
 struct TrackPose : public PathPose {
   float s;  // distance along the length of m_track
@@ -94,12 +97,68 @@ class Track {
   const_iterator iterator_at(int lap, size_t idx) const {
     return const_iterator(*this, lap, idx);
   }
-  const_iterator find_iterator(Point point, int lap) const;
-  const_iterator cbegin(int lap = 0) const {
-    return iterator_at(lap, 0);
+  size_t find_idx(const Point& point) const;
+  const_iterator find_iterator(const Point& point, int lap) const {
+    return iterator_at(lap, find_idx(point));
   }
+  const_iterator cbegin(int lap = 0) const { return iterator_at(lap, 0); }
 };
 
-class CheckpointTrack;
+class TrackIdxMap {
+ public:
+  using Idx = size_t;
+  using Storage = std::vector<Idx>;
+
+  TrackIdxMap(Storage storage, float resolution, Point min, size_t n_rows,
+              size_t n_cols)
+      : resolution{resolution},
+        min{min},
+        n_rows{n_rows},
+        n_cols{n_cols},
+        m_storage{std::move(storage)} {}
+  TrackIdxMap(TrackIdxMap&&) = default;
+  TrackIdxMap(const TrackIdxMap&) = default;
+
+  const float resolution;
+  const Point min;
+  const size_t n_rows;
+  const size_t n_cols;
+
+  Idx find(const Point& point) const {
+    const size_t row = std::round((point.x - min.x) / resolution);
+    const size_t col = std::round((point.y - min.y) / resolution);
+    ASSERT(row < n_rows);
+    ASSERT(col < n_cols);
+    return m_storage[row * n_cols + col];
+  }
+
+ private:
+  const Storage m_storage;
+};
+
+TrackIdxMap generate_track_idx_map(const Track& track);
+
+#include <iostream>
+
+class PrecomputedTrack : public Track {
+ public:
+  PrecomputedTrack(Track track_)
+      : Track{track_}, idx_map{generate_track_idx_map(*this)} {
+    ASSERT(std::all_of(poses.cbegin(), poses.cend(), [&](const Point& point) {
+      return Track::find_idx(point) == find_idx(point);
+    }));
+  }
+  PrecomputedTrack(PrecomputedTrack&&) = default;
+  PrecomputedTrack(const PrecomputedTrack&) = default;
+
+  virtual size_t find_idx(const Point& point) const final {
+    const int approx_idx = idx_map.find(point);
+    const auto b = poses.cbegin() + std::max<int>(approx_idx - 1, 0);
+    const auto e = poses.cbegin() + std::min<int>(approx_idx + 2, poses.size());
+    return closest_point(b, e, point) - poses.cbegin();
+  }
+
+  const TrackIdxMap idx_map;
+};
 
 Track load_track(std::istream& track_csv, const float buffer = 0);

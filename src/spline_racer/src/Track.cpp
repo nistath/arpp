@@ -1,5 +1,6 @@
 #include "Track.hpp"
 
+#include <algorithm>
 #include <functional>
 
 Track load_track(std::istream &track_csv,
@@ -83,4 +84,13 @@ Track load_track(std::istream &track_csv, const float buffer) {
     tpose.r.y = tpose.y + tpose.r.w * std::cos(tpose.yaw - M_PI / 2);
     return tpose;
   });
+}
+
+Track::const_iterator Track::find_iterator(Point point, int lap) const {
+  const size_t idx = std::min_element(poses.begin(), poses.end(),
+                                      [point](TrackPose a, TrackPose b) {
+                                        return a.dist(point) < b.dist(point);
+                                      }) -
+                     poses.begin();
+  return Track::const_iterator(*this, lap, idx);
 }

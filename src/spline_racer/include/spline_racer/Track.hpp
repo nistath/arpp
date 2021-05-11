@@ -2,6 +2,7 @@
 
 #include <istream>
 #include <iterator>
+#include <type_traits>
 #include <vector>
 
 #include "Geometry.hpp"
@@ -47,7 +48,7 @@ class Track {
     pointer operator->() const { return &m_track->poses[m_idx]; }
 
     // automatic comparison operator
-    bool operator<=>(const self_type&) const = default;
+    auto operator<=>(const self_type&) const = default;
 
     difference_type operator-(const self_type& other) const {
       const difference_type sz = m_track->poses.size();
@@ -85,6 +86,9 @@ class Track {
       return old;
     }
 
+    const_iterator add_lap(int delta_lap) const {
+      return const_iterator(*m_track, m_lap + delta_lap, m_idx);
+    }
     auto lap() const { return m_lap; }
     auto idx() const { return m_idx; }
 
@@ -97,7 +101,7 @@ class Track {
   const_iterator iterator_at(int lap, size_t idx) const {
     return const_iterator(*this, lap, idx);
   }
-  size_t find_idx(const Point& point) const;
+  virtual size_t find_idx(const Point& point) const;
   const_iterator find_iterator(const Point& point, int lap) const {
     return iterator_at(lap, find_idx(point));
   }
@@ -138,21 +142,20 @@ class TrackIdxMap {
 
 TrackIdxMap generate_track_idx_map(const Track& track);
 
-#include <iostream>
-
 class PrecomputedTrack : public Track {
  public:
   PrecomputedTrack(Track track_)
       : Track{track_}, idx_map{generate_track_idx_map(*this)} {
     ASSERT(std::all_of(poses.cbegin(), poses.cend(), [&](const Point& point) {
-      return Track::find_idx(point) == find_idx(point);
+      return Track::find_idx(point) == PrecomputedTrack::find_idx(point);
     }));
   }
   PrecomputedTrack(PrecomputedTrack&&) = default;
   PrecomputedTrack(const PrecomputedTrack&) = default;
 
-  virtual size_t find_idx(const Point& point) const final {
+  size_t find_idx(const Point& point) const final {
     const int approx_idx = idx_map.find(point);
+    // TODO: Might be best to use Track::const_iterator to work cyclically
     const auto b = poses.cbegin() + std::max<int>(approx_idx - 1, 0);
     const auto e = poses.cbegin() + std::min<int>(approx_idx + 2, poses.size());
     return closest_point(b, e, point) - poses.cbegin();
@@ -162,3 +165,22 @@ class PrecomputedTrack : public Track {
 };
 
 Track load_track(std::istream& track_csv, const float buffer = 0);
+
+template <class T>
+requires std::is_base_of<Point, T>::value struct OnTrack : public T {
+  OnTrack(const T& p, Track::const_iterator it) : T{p}, it{std::move(it)} {}
+  OnTrack(const T& p, const Track& track, int lap)
+      : OnTrack{p, track.find_iterator(p, lap)} {}
+
+  OnTrack(OnTrack&&) = default;
+  OnTrack(const OnTrack&) = default;
+  OnTrack& operator=(const OnTrack&) = default;
+
+  OnTrack add_lap(int delta_lap) const {
+    return {*static_cast<T>(this), it.add_lap(delta_lap)};
+  }
+
+  auto operator<=>(const OnTrack& other) const { return it <=> other.it; }
+
+  Track::const_iterator it;
+};

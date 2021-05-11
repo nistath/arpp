@@ -91,7 +91,13 @@ class Track {
     size_t m_idx = 0;
   };
 
+  const_iterator iterator_at(int lap, size_t idx) const {
+    return const_iterator(*this, lap, idx);
+  }
   const_iterator find_iterator(Point point, int lap) const;
+  const_iterator cbegin(int lap = 0) const {
+    return iterator_at(lap, 0);
+  }
 };
 
 class CheckpointTrack;

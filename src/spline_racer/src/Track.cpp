@@ -92,5 +92,5 @@ Track::const_iterator Track::find_iterator(Point point, int lap) const {
                                         return a.dist(point) < b.dist(point);
                                       }) -
                      poses.begin();
-  return Track::const_iterator(*this, lap, idx);
+  return iterator_at(lap, idx);
 }

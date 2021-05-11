@@ -9,13 +9,18 @@ int main() {
   auto track = PrecomputedTrack(load_track(track_csv));
   track_csv.close();
 
-  Objects objects({{track, 0, {-102, 13, M_PI / 4 - 2.566913882499374, 3, 3}, -10}});
+  Objects objects(
+      {{track, 0,
+        Box{-102, 13, M_PI / 4 - 2.566913882499374, 3, 3}.dilated(1.2), 30},
+       {track, 0,
+        Box{-102, 13, M_PI / 4 - 2.566913882499374, 3, 3}.dilated(1.2), -10}});
   std::sort(objects.begin(), objects.end());
 
-  std::cout << objects[0].corners[0].it.idx() << std::endl;
-  std::cout << objects[0].corners[1].it.idx() << std::endl;
-  std::cout << objects[0].corners[2].it.idx() << std::endl;
-  std::cout << objects[0].corners[3].it.idx() << std::endl;
+  for (const auto& obj : objects) {
+    std::cout << obj.corners[0].it.idx() << " " << obj.corners[1].it.idx()
+              << " " << obj.corners[2].it.idx() << " "
+              << obj.corners[3].it.idx() << std::endl;
+  }
 
   return 0;
 }

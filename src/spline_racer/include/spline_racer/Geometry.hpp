@@ -70,3 +70,12 @@ InputIt closest_point(InputIt begin, InputIt end, const Point& point) {
     return a.dist(point) < b.dist(point);
   });
 }
+
+template <class T>
+concept is_point = std::derived_from<T, Point>;
+
+template <class T, class A, class B>
+concept is_between = std::derived_from<T, A> &&
+                     (std::same_as<T, B> || !std::derived_from<B, T>);
+
+using Path = std::vector<PathPose>;

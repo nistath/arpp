@@ -167,7 +167,7 @@ class PrecomputedTrack : public Track {
 Track load_track(std::istream& track_csv, const float buffer = 0);
 
 template <class T>
-requires std::is_base_of<Point, T>::value struct OnTrack : public T {
+requires is_point<T> struct OnTrack : public T {
   OnTrack(const T& p, Track::const_iterator it) : T{p}, it{std::move(it)} {}
   OnTrack(const T& p, const Track& track, int lap)
       : OnTrack{p, track.find_iterator(p, lap)} {}

@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Spline Racer -esque path planner</description>
   <maintainer email="nistath@mit.edu">Nick Stathas</maintainer>
-  <license>LGPLv3</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

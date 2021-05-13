@@ -26,7 +26,7 @@ inline std::array<OnTrack<Point>, 4> get_four_corners(const Box& box,
 class Object {
  public:
   Object(const Track& track, int lap, Box box, float cost)
-      : box{box}, cost{cost}, corners{get_four_corners(box, track, lap)} {}
+      : box{box}, cost{cost}, corners{get_four_corners(box.dilated(std::copysign(0.5, cost)), track, lap)} {}
 
   auto operator<=>(const Object& other) const {
     return corners[0].it <=> other.corners[0].it;

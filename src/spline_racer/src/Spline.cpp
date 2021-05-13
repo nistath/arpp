@@ -108,10 +108,15 @@ requires is_between<T, Point, PathPose> PointVector<T> CubicSpline::interpolate(
   for (int i = 0; i < total_spline_pts; i++) {
     // find spline that hosts current interpolation point
     // TODO: Can be made more efficient with a local search
-    const auto spline_idx =
+    auto spline_idx =
         std::find_if(dists_cum.begin(), dists_cum.end(),
                      [&](float dist) { return get_dist_interp(i) < dist; }) -
         dists_cum.begin();
+
+    // this might happen due to floating point error
+    if (spline_idx == dists_cum.size()) {
+      --spline_idx;
+    }
 
     // get spline t value depending on progress within current element
     const float t = (spline_idx > 0)

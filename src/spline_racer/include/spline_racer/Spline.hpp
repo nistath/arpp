@@ -22,4 +22,9 @@ class CubicSpline : public PathInterpolator {
   template <class T>
   requires is_between<T, Point, PathPose> PointVector<T> interpolate(
       float const step_size);
+
+ private:
+  float calc_spline_length_at(size_t i) const {
+    return std::hypot(xc.block<1, 3>(i, 1).sum(), yc.block<1, 3>(i, 1).sum());
+  };
 };

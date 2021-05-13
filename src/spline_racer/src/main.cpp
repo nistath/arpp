@@ -3,6 +3,7 @@
 
 #include "Objects.hpp"
 #include "Track.hpp"
+#include "Search.hpp"
 
 int main() {
   std::ifstream track_csv("launch/maps/lvms/track.csv");

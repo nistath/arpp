@@ -19,8 +19,14 @@ struct Point {
     return (min.x < x) && (x < max.x) && (min.y < y) && (y < max.y);
   }
 
+  Point abs() const { return Point{std::abs(x), std::abs(y)}; }
+
   Point operator+(const Point& other) const {
     return Point{x + other.x, y + other.y};
+  }
+
+  Point operator/(const float scalar) const {
+    return Point{x / scalar, y / scalar};
   }
 
   Point operator-(const Point& other) const {
@@ -45,13 +51,13 @@ struct Setpoint : public PathPose, public State {
 };
 
 struct Box final : public Pose {
-  float w;  // width
   float l;  // length
+  float w;  // width
 
-  Box dilated(float w_buffer, float l_buffer) {
+  Box dilated(float l_buffer, float w_buffer) {
     Box b{*this};
-    b.w += w_buffer;
     b.l += l_buffer;
+    b.w += w_buffer;
     return b;
   }
 
@@ -62,6 +68,17 @@ struct Box final : public Pose {
     float offset_w = (right ? 1 : -1) * w / 2;
     return {x + offset_l * std::cos(yaw) - offset_w * std::sin(yaw),
             y + offset_w * std::cos(yaw) + offset_l * std::sin(yaw)};
+  }
+
+  bool contains(const Point& point) const {
+    const Point delta = *this - point;
+    const Point rotated{delta.x * std::cos(yaw) + delta.y * std::sin(yaw),
+                        delta.y * std::cos(yaw) - delta.x * std::sin(yaw)};
+    const Point relative = rotated.abs() - (Point{l, w} / 2);
+    if (relative.x > 0 || relative.x > 0) {
+      return false;
+    }
+    return true;
   }
 };
 
@@ -80,8 +97,13 @@ concept is_between = std::derived_from<T, A> &&
                      (std::same_as<T, B> || !std::derived_from<B, T>);
 
 template <class T>
-requires is_point<T>
-struct PointVector : public std::vector<T> {
+requires is_point<T> struct PointVector : public std::vector<T> {
+  PointVector() = default;
+  PointVector(PointVector&&) = default;
+  PointVector(const PointVector&) = default;
+  PointVector& operator=(PointVector&&) = default;
+  PointVector& operator=(const PointVector&) = default;
+
   auto get_length() {
     if (length < 0) {
       // discrete length

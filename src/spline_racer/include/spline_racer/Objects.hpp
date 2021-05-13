@@ -23,12 +23,12 @@ inline std::array<OnTrack<Point>, 4> get_four_corners(const Box& box,
   return corners;
 }
 
-class StaticObject {
+class Object {
  public:
-  StaticObject(const Track& track, int lap, Box box, float cost)
+  Object(const Track& track, int lap, Box box, float cost)
       : box{box}, cost{cost}, corners{get_four_corners(box, track, lap)} {}
 
-  auto operator<=>(const StaticObject& other) const {
+  auto operator<=>(const Object& other) const {
     return corners[0].it <=> other.corners[0].it;
   }
 
@@ -37,4 +37,12 @@ class StaticObject {
   std::array<OnTrack<Point>, 4> corners;
 };
 
-using Objects = std::vector<StaticObject>;
+using Objects = std::vector<Object>;
+
+template <class T>
+inline bool collides(const Object& object, const PointVector<T>& path) {
+  // TODO: Optimize this using track iterator for proximity guess.
+  return std::any_of(path.cbegin(), path.cend(), [&](const Point& point) {
+    return object.box.contains(point);
+  });
+}

@@ -81,10 +81,6 @@ requires is_between<T, Point, PathPose> PointVector<T> CubicSpline::interpolate(
     float const step_size) {
   const auto no_ctrl_pts = xc.rows();
 
-  auto calc_spline_length_at = [&](size_t i) {
-    return std::hypot(xc.block<1, 3>(i, 1).sum(), yc.block<1, 3>(i, 1).sum());
-  };
-
   std::vector<float> dists_cum;
   dists_cum.push_back(calc_spline_length_at(0));
   for (int i = 1; i < no_ctrl_pts; i++) {

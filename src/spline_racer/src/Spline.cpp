@@ -77,7 +77,7 @@ CubicSpline::CubicSpline(std::vector<Point> waypoints_, float psi_s,
 }
 
 template <class T>
-requires is_between<T, Point, PathPose> std::vector<T> CubicSpline::interpolate(
+requires is_between<T, Point, PathPose> PointVector<T> CubicSpline::interpolate(
     float const step_size) {
   const auto no_ctrl_pts = xc.rows();
 
@@ -106,7 +106,7 @@ requires is_between<T, Point, PathPose> std::vector<T> CubicSpline::interpolate(
       waypoints.size() - 2;  // exclude first and last points
   const auto total_spline_pts = no_interps_out + no_waypoints - 1;
 
-  std::vector<T> path;
+  PointVector<T> path;
   path.reserve(total_spline_pts);
 
   for (int i = 0; i < total_spline_pts; i++) {
@@ -151,6 +151,8 @@ requires is_between<T, Point, PathPose> std::vector<T> CubicSpline::interpolate(
 
     path.push_back(p);
   }
+
+  path.length = dists_cum.back();
 
   return path;
 }

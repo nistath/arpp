@@ -3,6 +3,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <limits>
+#include <numeric>
 
 struct Point {
   float x;
@@ -78,4 +79,22 @@ template <class T, class A, class B>
 concept is_between = std::derived_from<T, A> &&
                      (std::same_as<T, B> || !std::derived_from<B, T>);
 
-using Path = std::vector<PathPose>;
+template <class T>
+requires is_point<T>
+struct PointVector : public std::vector<T> {
+  auto get_length() {
+    if (length < 0) {
+      // discrete length
+      length = 0;
+      for (auto it = this->cbegin() + 1; it != this->cend(); ++it) {
+        length += it->dist(*(it - 1));
+      }
+    }
+
+    return length;
+  }
+
+  float length = -1;
+};
+
+using Path = PointVector<PathPose>;

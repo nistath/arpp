@@ -20,6 +20,6 @@ class CubicSpline : public PathInterpolator {
   Path interpolate_path(float step_size) override final;
 
   template <class T>
-  requires is_between<T, Point, PathPose> std::vector<T> interpolate(
+  requires is_between<T, Point, PathPose> PointVector<T> interpolate(
       float const step_size);
 };

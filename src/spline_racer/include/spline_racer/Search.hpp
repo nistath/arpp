@@ -35,6 +35,14 @@ class Search {
     Decision decision;
     const Node* parent;
 
+    template <std::output_iterator<Decision> OutIt>
+    void get_decisions(OutIt out) const {
+      if (parent != nullptr) {
+        parent->get_decisions(out);
+      }
+      *out++ = decision;
+    }
+
     template <std::output_iterator<Point> OutIt>
     void get_waypoints(OutIt out) const {
       if (parent != nullptr) {
@@ -60,12 +68,14 @@ class Search {
   };
 
  public:
+  using Decision = Node::Decision;
+
   Search(Objects input_objects, Path initial_path)
       : objects{input_objects},
-        best{std::move(initial_path)},
-        best_cost{calculate_total_cost(best, objects)},
-        start_pose{best.front()},
-        end_pose{best.back()} {
+        best_path{std::move(initial_path)},
+        best_cost{calculate_total_cost(best_path, objects)},
+        start_pose{best_path.front()},
+        end_pose{best_path.back()} {
     std::sort(objects.begin(), objects.end());
   }
   Search(Search&&) = default;
@@ -99,8 +109,10 @@ class Search {
       const auto candidate_cost = calculate_total_cost(candidate, objects);
 
       if (candidate_cost < best_cost) {
-        best = std::move(candidate);
+        best_path = std::move(candidate);
         best_cost = candidate_cost;
+        best_decisions.clear();
+        node.get_decisions(std::back_inserter(best_decisions));
       }
     }
 
@@ -118,16 +130,20 @@ class Search {
 
     return done = leaves.empty();
   }
-  const Path& get_best_path() const { return best; }
+
+  const auto& get_objects() const { return objects; }
+  const auto& get_best_path() const { return best_path; }
   auto get_best_cost() const { return best_cost; }
+  const auto& get_best_decisions() const { return best_decisions; }
 
  private:
   Objects objects;
-  Path best;
+  Path best_path;
   float best_cost;
   PathPose start_pose;
   PathPose end_pose;
 
+  std::vector<Node::Decision> best_decisions{};
   std::map<Objects::const_iterator, int> remaining_nodes{};
   std::priority_queue<Node> leaves{};
   bool done = false;

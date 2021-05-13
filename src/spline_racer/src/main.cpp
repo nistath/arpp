@@ -27,8 +27,8 @@ int main() {
 
   Objects objects(
       {{track, 0,
-        Box{-102.8, 13.9, M_PI / 2 + M_PI / 8 - 2.566, 5, 2}.dilated(1.2), 30},
-       {track, 0, Box{-97.0, 13., M_PI / 6 - 2.566, 1.0, 1.0}, -10}});
+        Box{-102.8, 13.9, M_PI / 2 + M_PI / 8 - 2.566, 2, 2}.dilated(1.2), 30},
+       {track, 0, Box{-97.0, 13., M_PI / 6 - 2.566, 1, 1}, -10}});
 
   for (const auto& object : objects) {
     std::cout << "Object with cost: " << object.cost
@@ -51,7 +51,25 @@ int main() {
   while (!search.advance()) {
     if (search.get_best_cost() != best_cost) {
       best_cost = search.get_best_cost();
-      std::cout << "Best path has total cost " << best_cost << std::endl;
+      std::cout << "New best path has total cost " << best_cost
+                << " with decisions: ";
+      auto best_decisions = search.get_best_decisions();
+      for (size_t i = 0; i < best_decisions.size(); ++i) {
+        std::cout << "(Object Cost: " << search.get_objects()[i].cost << ", Decision: ";
+        switch (best_decisions[i]) {
+          case Search::Decision::COLLIDE:
+            std::cout << "Collide";
+            break;
+          case Search::Decision::LEFT:
+            std::cout << "Left";
+            break;
+          case Search::Decision::RIGHT:
+            std::cout << "Right";
+            break;
+        }
+        std::cout << ") ";
+      }
+      std::cout << std::endl;
     }
   }
 

@@ -1,5 +1,6 @@
 #include <iterator>
 #include <map>
+#include <memory>
 #include <optional>
 #include <queue>
 #include <random>
@@ -33,11 +34,11 @@ class Search {
     long unsigned int heuristic_cost;
     Objects::const_iterator objit;
     Decision decision;
-    const Node* parent;
+    std::shared_ptr<const Node> parent;
 
     template <std::output_iterator<Decision> OutIt>
     void get_decisions(OutIt out) const {
-      if (parent != nullptr) {
+      if (parent) {
         parent->get_decisions(out);
       }
       *out++ = decision;
@@ -45,7 +46,7 @@ class Search {
 
     template <std::output_iterator<Point> OutIt>
     void get_waypoints(OutIt out) const {
-      if (parent != nullptr) {
+      if (parent) {
         parent->get_waypoints(out);
       }
       *out++ = get_waypoint();
@@ -84,10 +85,12 @@ class Search {
   bool advance() {
     if (done) return true;
 
-    auto add_object_nodes = [&](Objects::const_iterator const objit) {
-      leaves.push(Node{rand(), objit, Node::Decision::COLLIDE, nullptr});
-      leaves.push(Node{rand(), objit, Node::Decision::LEFT, nullptr});
-      leaves.push(Node{rand(), objit, Node::Decision::RIGHT, nullptr});
+    auto add_object_nodes = [&](Objects::const_iterator const objit,
+                                std::shared_ptr<const Node> const parent =
+                                    nullptr) {
+      leaves.push(Node{rand(), objit, Node::Decision::COLLIDE, parent});
+      leaves.push(Node{rand(), objit, Node::Decision::LEFT, parent});
+      leaves.push(Node{rand(), objit, Node::Decision::RIGHT, parent});
       remaining_nodes[objit] = 3;
     };
 
@@ -122,9 +125,10 @@ class Search {
       const auto next_objit = node.objit + 1;
 
       // if the next object exists and has not been used then add its nodes
+      // using the current node as their parent
       if (next_objit != objects.cend() &&
           remaining_nodes.count(next_objit) == 0) {
-        add_object_nodes(next_objit);
+        add_object_nodes(next_objit, std::make_shared<Node>(node));
       }
     }
 

@@ -11,23 +11,23 @@
 inline float calculate_object_cost(const Path& path, const Objects& objects) {
   return std::accumulate(objects.cbegin(), objects.cend(), 0.0f,
                          [&](float cost, const Object& object) {
-                           return cost + collides(object, path) ? object.cost
-                                                                : 0;
+                           return cost +
+                                  (collides(object, path) ? object.cost : 0);
                          });
 }
 
 inline float calculate_travel_cost(const Path& path) {
-  return path.length;  // assuming unit speed
+  return path.get_length();  // assuming unit speed
 }
 
-inline float calculate_cost(const Path& path, const Objects& objects) {
+inline float calculate_total_cost(const Path& path, const Objects& objects) {
   return calculate_object_cost(path, objects) + calculate_travel_cost(path);
 }
 
 class Search {
  private:
   struct Node {
-    // in the current state, left and right are arbitrary
+    // in the current state, left and right might be flipped
     enum class Decision { COLLIDE, LEFT, RIGHT };
 
     long unsigned int heuristic_cost;
@@ -45,6 +45,7 @@ class Search {
 
     Point get_waypoint() const {
       switch (decision) {
+        default:
         case Decision::COLLIDE:
           return objit->corners[0];
         case Decision::LEFT:
@@ -62,7 +63,7 @@ class Search {
   Search(Objects input_objects, Path initial_path)
       : objects{input_objects},
         best{std::move(initial_path)},
-        best_cost{calculate_cost(best, objects)},
+        best_cost{calculate_total_cost(best, objects)},
         start_pose{best.front()},
         end_pose{best.back()} {
     std::sort(objects.begin(), objects.end());
@@ -95,10 +96,11 @@ class Search {
     CubicSpline spline(waypoints, start_pose.yaw, end_pose.yaw);
     {
       const Path candidate = spline.interpolate_path(0.5);
-      const auto candidate_cost = calculate_cost(candidate, objects);
+      const auto candidate_cost = calculate_total_cost(candidate, objects);
 
       if (candidate_cost < best_cost) {
         best = std::move(candidate);
+        best_cost = candidate_cost;
       }
     }
 
@@ -117,6 +119,7 @@ class Search {
     return done = leaves.empty();
   }
   const Path& get_best_path() const { return best; }
+  auto get_best_cost() const { return best_cost; }
 
  private:
   Objects objects;

@@ -71,11 +71,11 @@ struct Box final : public Pose {
   }
 
   bool contains(const Point& point) const {
-    const Point delta = *this - point;
+    const Point delta = point - *this;
     const Point rotated{delta.x * std::cos(yaw) + delta.y * std::sin(yaw),
                         delta.y * std::cos(yaw) - delta.x * std::sin(yaw)};
     const Point relative = rotated.abs() - (Point{l, w} / 2);
-    if (relative.x > 0 || relative.x > 0) {
+    if (relative.x > 0 || relative.y > 0) {
       return false;
     }
     return true;
@@ -104,7 +104,7 @@ requires is_point<T> struct PointVector : public std::vector<T> {
   PointVector& operator=(PointVector&&) = default;
   PointVector& operator=(const PointVector&) = default;
 
-  auto get_length() {
+  auto get_length() const {
     if (length < 0) {
       // discrete length
       length = 0;
@@ -116,7 +116,7 @@ requires is_point<T> struct PointVector : public std::vector<T> {
     return length;
   }
 
-  float length = -1;
+  mutable float length = -1;
 };
 
 using Path = PointVector<PathPose>;

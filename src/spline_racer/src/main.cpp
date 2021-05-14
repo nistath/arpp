@@ -60,6 +60,9 @@ int main() {
         std::cout << "(Object Cost: " << search.get_objects()[i].cost
                   << ", Decision: ";
         switch (best_decisions[i]) {
+          case Search::Decision::IGNORE:
+            std::cout << "Ignore";
+            break;
           case Search::Decision::COLLIDE:
             std::cout << "Collide";
             break;

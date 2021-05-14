@@ -29,7 +29,7 @@ class Search {
  private:
   struct Node {
     // in the current state, left and right might be flipped
-    enum class Decision { COLLIDE, LEFT, RIGHT };
+    enum class Decision { IGNORE, COLLIDE, LEFT, RIGHT };
 
     long unsigned int heuristic_cost;
     Objects::const_iterator objit;
@@ -49,18 +49,21 @@ class Search {
       if (parent) {
         parent->get_waypoints(out);
       }
-      *out++ = get_waypoint();
+      if (decision != Decision::IGNORE) {
+        *out++ = get_waypoint();
+      }
     }
 
     Point get_waypoint() const {
       switch (decision) {
-        default:
         case Decision::COLLIDE:
           return objit->corners[0];
         case Decision::LEFT:
           return objit->corners[1];
         case Decision::RIGHT:
           return objit->corners[2];
+        default:
+          return Point{};
       }
     }
 

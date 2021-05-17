@@ -37,21 +37,23 @@ class Search {
     std::shared_ptr<const Node> parent;
 
     template <std::output_iterator<Decision> OutIt>
-    void get_decisions(OutIt out) const {
+    OutIt get_decisions(OutIt out) const {
       if (parent) {
-        parent->get_decisions(out);
+        out = parent->get_decisions(out);
       }
       *out++ = decision;
+      return out;
     }
 
     template <std::output_iterator<Point> OutIt>
-    void get_waypoints(OutIt out) const {
+    OutIt get_waypoints(OutIt out) const {
       if (parent) {
-        parent->get_waypoints(out);
+        out = parent->get_waypoints(out);
       }
       if (decision != Decision::IGNORE) {
         *out++ = get_waypoint();
       }
+      return out;
     }
 
     Point get_waypoint() const {

@@ -18,7 +18,7 @@ int main() {
   std::ifstream track_csv("launch/maps/lvms/track.csv");
 
   auto track_start = std::chrono::high_resolution_clock::now();
-  auto track = Track(load_track(track_csv));
+  auto track = PrecomputedTrack(load_track(track_csv));
   track_csv.close();
   auto track_stop = std::chrono::high_resolution_clock::now();
   std::cout << "Track loaded and precomputed in "
